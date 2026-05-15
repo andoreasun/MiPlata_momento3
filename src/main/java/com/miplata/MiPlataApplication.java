@@ -11,7 +11,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
  *
  * Criterios de aceptación:
  * - Flujo: Inicio → Registro/Login → Panel transaccional
- * - Diseño responsive: Desktop, Tablet y Móvil
+ * - Diseño responsive: Desktop, Tablet y Móvi
  * - Identidad visual 'Mi Plata' coherente (colores y tipografía)
  * - Sistema de alertas: Éxito (verde), Error (rojo), Advertencia (amarillo)
  * - Ninguna sección sin navegación de retorno
