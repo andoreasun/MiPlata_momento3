@@ -11,6 +11,6 @@ public interface ClienteUseCase {
     void desbloquearCliente(UUID clienteId);
     List<ClienteResponse> listarTodos();
     void eliminarCliente(UUID clienteId);
-    CuentaResponse abrirCuenta(UUID clienteId,
-                               AbrirCuentaRequest request);
+    CuentaResponse abrirCuenta(UUID clienteId, AbrirCuentaRequest request);
+    ClienteResponse obtenerCliente(UUID clienteId);
 }

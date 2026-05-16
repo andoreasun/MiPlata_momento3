@@ -145,6 +145,12 @@ public class ClienteService implements ClienteUseCase {
                 .build();
     }
 
+    @Override
+    public ClienteResponse obtenerCliente(UUID clienteId) {
+        Cliente c = getCliente(clienteId);
+        return toResponseConCuentas(c);
+    }
+
     private Cliente getCliente(UUID id) {
         return clienteRepo.buscarPorId(id)
                 .orElseThrow(() -> new IllegalArgumentException(
@@ -160,6 +166,31 @@ public class ClienteService implements ClienteUseCase {
                 .username(c.getUsername())
                 .estado(c.getEstado())
                 .intentosFallidos(c.getIntentosFallidos())
+                .build();
+    }
+
+    private ClienteResponse toResponseConCuentas(Cliente c) {
+        List<CuentaResponse> cuentas = c.getCuentas().stream()
+                .map(cuenta -> {
+                    CuentaResponse.CuentaResponseBuilder b = CuentaResponse.builder()
+                            .id(cuenta.getId().toString())
+                            .numeroCuenta(cuenta.getNumeroCuenta())
+                            .tipoCuenta(cuenta.getTipoCuenta())
+                            .saldo(cuenta.getSaldo())
+                            .estado(cuenta.getEstado());
+                    if (cuenta instanceof TarjetaCredito t)
+                        b.cupoDisponible(t.getCupoDisponible());
+                    return b.build();
+                }).toList();
+        return ClienteResponse.builder()
+                .id(c.getId().toString())
+                .cedula(c.getCedula())
+                .nombreCompleto(c.getNombreCompleto())
+                .celular(c.getCelular())
+                .username(c.getUsername())
+                .estado(c.getEstado())
+                .intentosFallidos(c.getIntentosFallidos())
+                .cuentas(cuentas)
                 .build();
     }
 }
