@@ -98,6 +98,19 @@ public class CajeroService implements CajeroUseCase {
                 .build();
     }
 
+    @Override
+    public CuentaResponse buscarCuentaPorNumero(String numeroCuenta) {
+        return cuentaRepo.buscarPorNumero(numeroCuenta)
+                .map(c -> CuentaResponse.builder()
+                        .id(c.getId().toString())
+                        .numeroCuenta(c.getNumeroCuenta())
+                        .tipoCuenta(c.getTipoCuenta())
+                        .saldo(c.getSaldo())
+                        .estado(c.getEstado())
+                        .build())
+                .orElse(null);
+    }
+
     private Cuenta getCuenta(UUID id) {
         return cuentaRepo.buscarPorId(id)
                 .orElseThrow(() -> new IllegalArgumentException(

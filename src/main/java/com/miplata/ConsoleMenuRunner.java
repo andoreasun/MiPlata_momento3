@@ -11,6 +11,7 @@ import org.springframework.stereotype.Component;
 import javax.sql.DataSource;
 import java.math.BigDecimal;
 import java.sql.Connection;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 import java.util.UUID;
@@ -31,6 +32,7 @@ public class ConsoleMenuRunner implements CommandLineRunner {
     private String clienteIdSesion = null;
     private String usernameSesion  = null;
     private String nombreSesion    = null;
+    private List<CuentaResponse> cuentasSesion = new ArrayList<>();
 
     @Override
     public void run(String... args) {
@@ -38,6 +40,11 @@ public class ConsoleMenuRunner implements CommandLineRunner {
         println("        MI PLATA - Sistema Bancario        ");
         println("============================================");
         verificarConexionDB();
+
+        println("\nPresione 1 para iniciar la aplicación...");
+        while (!leer("").equals("1")) {
+            println("Presione 1 para continuar.");
+        }
 
         boolean continuar = true;
         while (continuar) {
@@ -61,7 +68,7 @@ public class ConsoleMenuRunner implements CommandLineRunner {
     // ── MP-5: Registro ──────────────────────────────────────────────────────
 
     private void registrarCliente() {
-        println("\n--- Registro de nuevo cliente (MP-5) ---");
+        println("\n--- Registro de nuevo cliente ---");
         RegistroClienteRequest req = new RegistroClienteRequest();
         req.setCedula(leer("Cédula/Pasaporte: "));
         req.setNombreCompleto(leer("Nombre completo: "));
@@ -81,7 +88,7 @@ public class ConsoleMenuRunner implements CommandLineRunner {
     // ── MP-6: Login ──────────────────────────────────────────────────────────
 
     private void iniciarSesion() {
-        println("\n--- Iniciar sesión (MP-6) ---");
+        println("\n--- Iniciar sesión ---");
         LoginRequest req = new LoginRequest();
         req.setUsername(leer("Usuario: "));
         req.setPassword(leer("Contraseña: "));
@@ -91,6 +98,7 @@ public class ConsoleMenuRunner implements CommandLineRunner {
                 clienteIdSesion = resp.getClienteId();
                 usernameSesion  = req.getUsername();
                 nombreSesion    = resp.getNombreCompleto();
+                cargarCuentas();
                 println("[OK] " + resp.getMensaje());
                 menuCliente();
             } else {
@@ -100,6 +108,45 @@ public class ConsoleMenuRunner implements CommandLineRunner {
             }
         } catch (Exception e) {
             println("[ERROR] " + e.getMessage());
+        }
+    }
+
+    private void cargarCuentas() {
+        try {
+            ClienteResponse cliente = clienteUseCase.obtenerCliente(
+                    UUID.fromString(clienteIdSesion));
+            cuentasSesion = cliente.getCuentas() != null
+                    ? new ArrayList<>(cliente.getCuentas())
+                    : new ArrayList<>();
+        } catch (Exception e) {
+            cuentasSesion = new ArrayList<>();
+        }
+    }
+
+    // ── Selección de cuenta por número ───────────────────────────────────────
+
+    private CuentaResponse seleccionarCuenta() {
+        if (cuentasSesion.isEmpty()) {
+            println("[!] No tienes cuentas registradas. Abre una primero.");
+            return null;
+        }
+        println("\n  Tus cuentas:");
+        for (int i = 0; i < cuentasSesion.size(); i++) {
+            CuentaResponse c = cuentasSesion.get(i);
+            println(String.format("  %d. [%-15s] %-20s | Saldo: $%.2f",
+                    i + 1, c.getTipoCuenta(), c.getNumeroCuenta(), c.getSaldo()));
+        }
+        String input = leer("  Seleccione cuenta (número): ");
+        try {
+            int idx = Integer.parseInt(input) - 1;
+            if (idx < 0 || idx >= cuentasSesion.size()) {
+                println("[!] Número inválido.");
+                return null;
+            }
+            return cuentasSesion.get(idx);
+        } catch (NumberFormatException e) {
+            println("[!] Ingrese un número válido.");
+            return null;
         }
     }
 
@@ -136,6 +183,7 @@ public class ConsoleMenuRunner implements CommandLineRunner {
                     clienteIdSesion = null;
                     usernameSesion  = null;
                     nombreSesion    = null;
+                    cuentasSesion.clear();
                     activo = false;
                 }
                 default -> println("[!] Opción no válida.");
@@ -147,25 +195,21 @@ public class ConsoleMenuRunner implements CommandLineRunner {
 
     private void verCuentas() {
         println("\n--- Mis cuentas ---");
-        try {
-            ClienteResponse cliente = clienteUseCase.obtenerCliente(
-                    UUID.fromString(clienteIdSesion));
-            if (cliente.getCuentas() == null || cliente.getCuentas().isEmpty()) {
-                println("No tienes cuentas registradas.");
-                return;
-            }
-            for (CuentaResponse c : cliente.getCuentas()) {
-                println(String.format("  [%-15s] %-20s | Saldo: $%10.2f | Estado: %s",
-                        c.getTipoCuenta(), c.getNumeroCuenta(), c.getSaldo(), c.getEstado()));
-                println("    ID: " + c.getId());
-            }
-        } catch (Exception e) {
-            println("[ERROR] " + e.getMessage());
+        cargarCuentas();
+        if (cuentasSesion.isEmpty()) {
+            println("No tienes cuentas registradas.");
+            return;
+        }
+        for (int i = 0; i < cuentasSesion.size(); i++) {
+            CuentaResponse c = cuentasSesion.get(i);
+            println(String.format("  %d. [%-15s] %-20s | Saldo: $%.2f | Estado: %s",
+                    i + 1, c.getTipoCuenta(), c.getNumeroCuenta(),
+                    c.getSaldo(), c.getEstado()));
         }
     }
 
     private void abrirCuenta() {
-        println("\n--- Abrir nueva cuenta (MP-1/2/3/4) ---");
+        println("\n--- Abrir nueva cuenta ---");
         println("Tipo de cuenta:");
         println("1. AHORROS");
         println("2. CORRIENTE");
@@ -191,8 +235,8 @@ public class ConsoleMenuRunner implements CommandLineRunner {
             CuentaResponse resp = clienteUseCase.abrirCuenta(
                     UUID.fromString(clienteIdSesion), req);
             println("[OK] Cuenta abierta: " + resp.getNumeroCuenta()
-                    + " | Saldo: $" + resp.getSaldo()
-                    + " | ID: " + resp.getId());
+                    + " | Saldo: $" + resp.getSaldo());
+            cargarCuentas();
         } catch (Exception e) {
             println("[ERROR] " + e.getMessage());
         }
@@ -201,10 +245,12 @@ public class ConsoleMenuRunner implements CommandLineRunner {
     // ── MP-11: Saldo y extracto ──────────────────────────────────────────────
 
     private void consultarSaldo() {
-        println("\n--- Consultar saldo (MP-11) ---");
-        String id = leer("ID de la cuenta: ");
+        println("\n--- Consultar saldo ---");
+        CuentaResponse cuenta = seleccionarCuenta();
+        if (cuenta == null) return;
         try {
-            SaldoResponse resp = cajeroUseCase.consultarSaldo(UUID.fromString(id));
+            SaldoResponse resp = cajeroUseCase.consultarSaldo(
+                    UUID.fromString(cuenta.getId()));
             println("[OK] " + resp.getNumeroCuenta()
                     + " | " + resp.getTipoCuenta()
                     + " | Saldo: $" + resp.getSaldo());
@@ -214,11 +260,12 @@ public class ConsoleMenuRunner implements CommandLineRunner {
     }
 
     private void verExtracto() {
-        println("\n--- Extracto de movimientos (MP-11) ---");
-        String id = leer("ID de la cuenta: ");
+        println("\n--- Extracto de movimientos ---");
+        CuentaResponse cuenta = seleccionarCuenta();
+        if (cuenta == null) return;
         try {
             List<MovimientoDto> movimientos = cajeroUseCase.obtenerMovimientos(
-                    UUID.fromString(id));
+                    UUID.fromString(cuenta.getId()));
             if (movimientos.isEmpty()) {
                 println("Sin movimientos registrados.");
                 return;
@@ -239,12 +286,15 @@ public class ConsoleMenuRunner implements CommandLineRunner {
     // ── MP-9: Consignar ──────────────────────────────────────────────────────
 
     private void consignar() {
-        println("\n--- Consignar fondos (MP-9) ---");
-        String id    = leer("ID de la cuenta: ");
+        println("\n--- Consignar fondos ---");
+        CuentaResponse cuenta = seleccionarCuenta();
+        if (cuenta == null) return;
         String monto = leer("Monto a consignar: $");
         try {
-            cajeroUseCase.consignar(UUID.fromString(id), new BigDecimal(monto));
+            cajeroUseCase.consignar(UUID.fromString(cuenta.getId()),
+                    new BigDecimal(monto));
             println("[OK] Consignación exitosa.");
+            cargarCuentas();
         } catch (Exception e) {
             println("[ERROR] " + e.getMessage());
         }
@@ -254,14 +304,16 @@ public class ConsoleMenuRunner implements CommandLineRunner {
 
     private void retirar() {
         println("\n--- Retirar fondos ---");
-        String id    = leer("ID de la cuenta: ");
+        CuentaResponse cuenta = seleccionarCuenta();
+        if (cuenta == null) return;
         String monto = leer("Monto a retirar: $");
         try {
             RetiroResponse resp = cajeroUseCase.retirar(
-                    UUID.fromString(id), new BigDecimal(monto));
+                    UUID.fromString(cuenta.getId()), new BigDecimal(monto));
             println("[OK] Monto retirado: $" + resp.getMontoRetirado()
                     + " | Interés: $" + resp.getInteresAplicado()
                     + " | Saldo resultante: $" + resp.getSaldoResultante());
+            cargarCuentas();
         } catch (Exception e) {
             println("[ERROR] " + e.getMessage());
         }
@@ -270,19 +322,42 @@ public class ConsoleMenuRunner implements CommandLineRunner {
     // ── MP-10: Transferir ────────────────────────────────────────────────────
 
     private void transferir() {
-        println("\n--- Transferencia (MP-10) ---");
-        String origen  = leer("ID cuenta origen: ");
-        String destino = leer("ID cuenta destino: ");
-        String monto   = leer("Monto: $");
+        println("\n--- Transferencia ---");
+        println("  Cuenta ORIGEN:");
+        CuentaResponse origen = seleccionarCuenta();
+        if (origen == null) return;
+
+        println("  Cuenta DESTINO (puede ser de otro cliente):");
+        println("  1. Una de mis cuentas");
+        println("  2. Cuenta de tercero (por número de cuenta)");
+        String modo = leer("  Seleccione: ");
+
+        String destinoId;
         try {
+            if (modo.equals("1")) {
+                CuentaResponse destino = seleccionarCuenta();
+                if (destino == null) return;
+                destinoId = destino.getId();
+            } else {
+                String numeroCuenta = leer("  Número de cuenta destino: ");
+                CuentaResponse cuentaDestino = cajeroUseCase.buscarCuentaPorNumero(numeroCuenta);
+                if (cuentaDestino == null) {
+                    println("[!] Cuenta destino no encontrada.");
+                    return;
+                }
+                destinoId = cuentaDestino.getId();
+            }
+
+            String monto = leer("  Monto: $");
             TransferenciaResponse resp = cajeroUseCase.transferir(
-                    UUID.fromString(origen),
-                    UUID.fromString(destino),
+                    UUID.fromString(origen.getId()),
+                    UUID.fromString(destinoId),
                     new BigDecimal(monto));
             println("[OK] $" + resp.getMonto()
                     + " de " + resp.getCuentaOrigen()
                     + " → " + resp.getCuentaDestino()
                     + " | Saldo origen: $" + resp.getSaldoOrigenResultante());
+            cargarCuentas();
         } catch (Exception e) {
             println("[ERROR] " + e.getMessage());
         }
@@ -291,17 +366,19 @@ public class ConsoleMenuRunner implements CommandLineRunner {
     // ── MP-4: Compra con tarjeta de crédito ──────────────────────────────────
 
     private void comprarConCredito() {
-        println("\n--- Compra con tarjeta de crédito (MP-4) ---");
-        String id     = leer("ID de la tarjeta: ");
+        println("\n--- Compra con tarjeta de crédito ---");
+        CuentaResponse cuenta = seleccionarCuenta();
+        if (cuenta == null) return;
         String monto  = leer("Monto de la compra: $");
         String cuotas = leer("Número de cuotas: ");
         try {
             CompraResponse resp = cajeroUseCase.comprarConCredito(
-                    UUID.fromString(id),
+                    UUID.fromString(cuenta.getId()),
                     new BigDecimal(monto),
                     Integer.parseInt(cuotas));
             println("[OK] " + resp.getResumen());
             println("     Cupo disponible: $" + resp.getCupoDisponibleResultante());
+            cargarCuentas();
         } catch (Exception e) {
             println("[ERROR] " + e.getMessage());
         }
@@ -310,7 +387,7 @@ public class ConsoleMenuRunner implements CommandLineRunner {
     // ── MP-7: Cambio de contraseña ───────────────────────────────────────────
 
     private void cambiarPassword() {
-        println("\n--- Cambio de contraseña (MP-7) ---");
+        println("\n--- Cambio de contraseña ---");
         CambioPasswordRequest req = new CambioPasswordRequest();
         req.setUsername(usernameSesion);
         req.setPasswordActual(leer("Contraseña actual: "));
@@ -327,7 +404,7 @@ public class ConsoleMenuRunner implements CommandLineRunner {
     // ── MP-8: Panel Administrador ────────────────────────────────────────────
 
     private void menuAdmin() {
-        println("\n--- Panel Administrador (MP-8) ---");
+        println("\n--- Panel Administrador ---");
         boolean activo = true;
         while (activo) {
             println("\n=== PANEL ADMINISTRADOR ===");

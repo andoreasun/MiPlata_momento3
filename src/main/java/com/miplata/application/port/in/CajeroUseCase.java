@@ -16,4 +16,5 @@ public interface CajeroUseCase {
     CompraResponse comprarConCredito(UUID tarjetaId,
                                      BigDecimal monto,
                                      int cuotas);
+    CuentaResponse buscarCuentaPorNumero(String numeroCuenta);
 }
