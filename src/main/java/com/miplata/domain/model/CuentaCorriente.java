@@ -1,5 +1,6 @@
 package com.miplata.domain.model;
 
+import com.miplata.domain.enums.EstadoCuenta;
 import com.miplata.domain.enums.TipoCuenta;
 import com.miplata.domain.enums.TipoMovimiento;
 import com.miplata.domain.exception.SaldoInsuficienteException;
@@ -24,9 +25,16 @@ public class CuentaCorriente extends Cuenta {
 
     private static final BigDecimal FACTOR_SOBREGIRO = new BigDecimal("1.20");
 
+    /** Para cuentas nuevas (estado ACTIVA por defecto). */
     public CuentaCorriente(UUID id, String numeroCuenta,
                            BigDecimal saldoInicial, UUID clienteId) {
-        super(id, numeroCuenta, TipoCuenta.CORRIENTE, saldoInicial, clienteId);
+        super(id, numeroCuenta, TipoCuenta.CORRIENTE, saldoInicial, EstadoCuenta.ACTIVA, clienteId);
+    }
+
+    /** Para cargar desde la base de datos, preservando el estado real. */
+    public CuentaCorriente(UUID id, String numeroCuenta,
+                           BigDecimal saldo, EstadoCuenta estado, UUID clienteId) {
+        super(id, numeroCuenta, TipoCuenta.CORRIENTE, saldo, estado, clienteId);
     }
 
     @Override

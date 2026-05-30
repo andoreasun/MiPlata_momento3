@@ -6,6 +6,8 @@ import com.miplata.domain.enums.TipoMovimiento;
 import com.miplata.domain.exception.CuentaBloqueadaException;
 import com.miplata.domain.exception.MontoInvalidoException;
 import com.miplata.domain.exception.TransferenciaInvalidaException;
+import com.miplata.domain.interfaces.ITransaction;
+import com.miplata.domain.interfaces.ITransferible;
 import lombok.Getter;
 import java.math.BigDecimal;
 import java.util.*;
@@ -20,12 +22,12 @@ import java.util.*;
  * Criterios de aceptación:
  * - Clase abstracta con atributos comunes: id, numeroCuenta, saldo, estado, movimientos
  * - Método abstracto retirar() implementado con reglas propias en cada subclase
- * - Métodos concretos: consignar(), transferirA(), consultarSaldo(), obtenerMovimientos()
+ * - Métodos concretos: consignar(), transferir(), consultarSaldo(), obtenerMovimientos()
  * - Movimientos ordenados de forma descendente por fecha
  * - No permite operaciones sobre cuentas inactivas o bloqueadas
  */
 @Getter
-public abstract class Cuenta {
+public abstract class Cuenta implements ITransaction, ITransferible {
 
     protected final UUID id;
     protected final String numeroCuenta;
@@ -36,16 +38,17 @@ public abstract class Cuenta {
     protected final List<Movimiento> movimientos;
 
     protected Cuenta(UUID id, String numeroCuenta, TipoCuenta tipoCuenta,
-                     BigDecimal saldoInicial, UUID clienteId) {
+                     BigDecimal saldoInicial, EstadoCuenta estado, UUID clienteId) {
         this.id = id;
         this.numeroCuenta = numeroCuenta;
         this.tipoCuenta = tipoCuenta;
         this.saldo = saldoInicial;
-        this.estado = EstadoCuenta.ACTIVA;
+        this.estado = estado != null ? estado : EstadoCuenta.ACTIVA;
         this.clienteId = clienteId;
         this.movimientos = new ArrayList<>();
     }
 
+    @Override
     public void consignar(BigDecimal monto) {
         validarActiva();
         if (monto.compareTo(BigDecimal.ZERO) <= 0)
@@ -54,25 +57,30 @@ public abstract class Cuenta {
         registrar(TipoMovimiento.CONSIGNACION, monto, "Consignación");
     }
 
+    @Override
     public abstract BigDecimal retirar(BigDecimal monto);
 
+    @Override
     public BigDecimal consultarSaldo() {
         return this.saldo;
     }
 
+    @Override
     public List<Movimiento> obtenerMovimientos() {
         return movimientos.stream()
                 .sorted(Comparator.comparing(Movimiento::getFecha).reversed())
                 .toList();
     }
 
+    @Override
     public void validarDestino(Cuenta destino) {
         if (this.id.equals(destino.getId()))
             throw new TransferenciaInvalidaException(
                     "Prohibido transferir al mismo producto.");
     }
 
-    public void transferirA(Cuenta destino, BigDecimal monto) {
+    @Override
+    public void transferir(Cuenta destino, BigDecimal monto) {
         validarDestino(destino);
         validarActiva();
         retirarInterno(monto, TipoMovimiento.TRANSFERENCIA_DEBITO,

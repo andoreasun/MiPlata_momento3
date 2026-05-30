@@ -1,5 +1,6 @@
 package com.miplata.domain.model;
 
+import com.miplata.domain.enums.EstadoCuenta;
 import com.miplata.domain.enums.TipoCuenta;
 import com.miplata.domain.enums.TipoMovimiento;
 import com.miplata.domain.exception.SaldoInsuficienteException;
@@ -24,9 +25,16 @@ public class CuentaAhorros extends Cuenta {
 
     private static final BigDecimal TASA_INTERES = new BigDecimal("0.015");
 
+    /** Para cuentas nuevas (estado ACTIVA por defecto). */
     public CuentaAhorros(UUID id, String numeroCuenta,
                          BigDecimal saldoInicial, UUID clienteId) {
-        super(id, numeroCuenta, TipoCuenta.AHORROS, saldoInicial, clienteId);
+        super(id, numeroCuenta, TipoCuenta.AHORROS, saldoInicial, EstadoCuenta.ACTIVA, clienteId);
+    }
+
+    /** Para cargar desde la base de datos, preservando el estado real. */
+    public CuentaAhorros(UUID id, String numeroCuenta,
+                         BigDecimal saldo, EstadoCuenta estado, UUID clienteId) {
+        super(id, numeroCuenta, TipoCuenta.AHORROS, saldo, estado, clienteId);
     }
 
     @Override

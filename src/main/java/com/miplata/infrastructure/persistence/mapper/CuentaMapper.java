@@ -5,21 +5,21 @@ import com.miplata.infrastructure.persistence.entity.CuentaEntity;
 import com.miplata.infrastructure.persistence.entity.MovimientoEntity;
 import org.springframework.stereotype.Component;
 import java.util.List;
+import java.util.UUID;
 
 @Component
 public class CuentaMapper {
 
     public Cuenta toDomain(CuentaEntity e) {
+        UUID clienteId = e.getCliente() != null ? e.getCliente().getId() : null;
         Cuenta cuenta = switch (e.getTipoCuenta()) {
             case AHORROS -> new CuentaAhorros(
-                    e.getId(), e.getNumeroCuenta(), e.getSaldo(),
-                    e.getCliente() != null ? e.getCliente().getId() : null);
+                    e.getId(), e.getNumeroCuenta(), e.getSaldo(), e.getEstado(), clienteId);
             case CORRIENTE -> new CuentaCorriente(
-                    e.getId(), e.getNumeroCuenta(), e.getSaldo(),
-                    e.getCliente() != null ? e.getCliente().getId() : null);
+                    e.getId(), e.getNumeroCuenta(), e.getSaldo(), e.getEstado(), clienteId);
             case TARJETA_CREDITO -> new TarjetaCredito(
                     e.getId(), e.getNumeroCuenta(), e.getCupoTotal(),
-                    e.getCliente() != null ? e.getCliente().getId() : null);
+                    e.getCupoDisponible(), e.getSaldo(), e.getEstado(), clienteId);
         };
 
         if (e.getMovimientos() != null) {

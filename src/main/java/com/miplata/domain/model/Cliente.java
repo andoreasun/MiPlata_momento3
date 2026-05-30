@@ -3,6 +3,7 @@ package com.miplata.domain.model;
 import com.miplata.domain.enums.EstadoCliente;
 import com.miplata.domain.exception.CredencialesInvalidasException;
 import com.miplata.domain.exception.CuentaBloqueadaException;
+import com.miplata.domain.interfaces.IAutenticable;
 import lombok.Builder;
 import lombok.Getter;
 import java.util.*;
@@ -25,7 +26,7 @@ import java.util.*;
  */
 @Getter
 @Builder
-public class Cliente {
+public class Cliente implements IAutenticable {
 
     private static final int MAX_INTENTOS = 3;
 
@@ -41,6 +42,7 @@ public class Cliente {
     @Builder.Default
     private List<Cuenta> cuentas = new ArrayList<>();
 
+    @Override
     public void autenticar(boolean passwordCorrecto) {
         if (estado == EstadoCliente.BLOQUEADO)
             throw new CuentaBloqueadaException(
@@ -60,7 +62,13 @@ public class Cliente {
         this.intentosFallidos = 0;
     }
 
-    public void cambiarPassword(boolean actualCorrecto, String hashNuevo) {
+    @Override
+    public void cerrarSesion() {
+        // La sesión es gestionada por la capa de presentación; el dominio no mantiene estado de sesión
+    }
+
+    @Override
+    public void cambiarContrasena(boolean actualCorrecto, String hashNuevo) {
         autenticar(actualCorrecto);
         this.passwordHash = hashNuevo;
     }

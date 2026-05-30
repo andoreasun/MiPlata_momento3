@@ -1,5 +1,6 @@
 package com.miplata.domain.model;
 
+import com.miplata.domain.enums.EstadoCuenta;
 import com.miplata.domain.enums.RangoCuotas;
 import com.miplata.domain.enums.TipoCuenta;
 import com.miplata.domain.enums.TipoMovimiento;
@@ -29,12 +30,22 @@ public class TarjetaCredito extends Cuenta {
     private final BigDecimal cupoTotal;
     private BigDecimal cupoDisponible;
 
+    /** Para tarjetas nuevas (cupoDisponible = cupoTotal, estado ACTIVA). */
     public TarjetaCredito(UUID id, String numeroCuenta,
                           BigDecimal cupoTotal, UUID clienteId) {
         super(id, numeroCuenta, TipoCuenta.TARJETA_CREDITO,
-                BigDecimal.ZERO, clienteId);
+                BigDecimal.ZERO, EstadoCuenta.ACTIVA, clienteId);
         this.cupoTotal = cupoTotal;
         this.cupoDisponible = cupoTotal;
+    }
+
+    /** Para cargar desde la base de datos, preservando cupoDisponible y estado reales. */
+    public TarjetaCredito(UUID id, String numeroCuenta, BigDecimal cupoTotal,
+                          BigDecimal cupoDisponible, BigDecimal saldo,
+                          EstadoCuenta estado, UUID clienteId) {
+        super(id, numeroCuenta, TipoCuenta.TARJETA_CREDITO, saldo, estado, clienteId);
+        this.cupoTotal = cupoTotal;
+        this.cupoDisponible = cupoDisponible != null ? cupoDisponible : cupoTotal;
     }
 
     @Override

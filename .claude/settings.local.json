@@ -5,7 +5,30 @@
       "Bash(Select-Object FullName, PSIsContainer)",
       "Bash(Sort-Object FullName)",
       "Bash(ConvertTo-Csv -NoTypeInformation)",
-      "PowerShell($path = \"C:\\\\Users\\\\Andrea\\\\OneDrive\\\\Desktop\\\\Dev_Coding\\\\-mi-plata-main\\\\-mi-plata-main\"; if \\(Test-Path $path\\) { Get-ChildItem -Path $path -Recurse -Force | ForEach-Object { $_.FullName } } else { \"Path does not exist\" })"
+      "PowerShell($path = \"C:\\\\Users\\\\Andrea\\\\OneDrive\\\\Desktop\\\\Dev_Coding\\\\-mi-plata-main\\\\-mi-plata-main\"; if \\(Test-Path $path\\) { Get-ChildItem -Path $path -Recurse -Force | ForEach-Object { $_.FullName } } else { \"Path does not exist\" })",
+      "PowerShell($lines = Get-Content \"C:\\\\Users\\\\Andrea\\\\Downloads\\\\proyecto_decisiones\\\\coill-dubh-v2.html\"; for \\($i=0; $i -lt $lines.Count; $i++\\) { if \\($lines[$i] -match \"^d2[:{]|^d2a[:{]|^d2b[:{]|^d3[:{]|^d3_morfeo|^d4_morfeo|^d3b[:{]\" -and $lines[$i] -notmatch \"data:image\"\\) { Write-Host \"$\\($i+1\\): $\\($lines[$i].Substring\\(0, [Math]::Min\\(120, $lines[$i].Length\\)\\)\\)\" } })",
+      "Bash(mkdir \"C:\\\\Users\\\\Andrea\\\\OneDrive\\\\Desktop\\\\Dev_Coding\\\\miplata_front_momento3\\\\css\")",
+      "Bash(mkdir \"C:\\\\Users\\\\Andrea\\\\OneDrive\\\\Desktop\\\\Dev_Coding\\\\miplata_front_momento3\\\\js\")",
+      "Read(//c/Users/Andrea/OneDrive/Desktop/Dev_Coding/miplata_front_momento3/**)",
+      "Bash(npx --version)",
+      "Bash(mkdir \"C:\\\\Users\\\\Andrea\\\\OneDrive\\\\Desktop\\\\Dev_Coding\\\\miplata_front_momento3\\\\.claude\" 2>&1)",
+      "Bash(npx serve *)",
+      "Bash(node --input-type=module)",
+      "Bash(node --check js/models.js)",
+      "Bash(node --check js/utils.js)",
+      "Bash(node --check js/state.js)",
+      "Bash(node --check js/render.js)",
+      "Bash(node --check js/toast.js)",
+      "Bash(node --check js/modal.js)",
+      "Bash(node --check js/router.js)",
+      "Bash(node --check js/transacciones.js)",
+      "Bash(node --check js/servicios.js)",
+      "Bash(ls /mnt/c/Users/Andrea/OneDrive/Desktop/Dev_Coding/miplata_front_momento3/img/)",
+      "mcp__Claude_Preview__preview_start",
+      "PowerShell(Remove-Item \"C:\\\\Users\\\\Andrea\\\\OneDrive\\\\Desktop\\\\Dev_Coding\\\\miplata_front_momento3\\\\Panel Cajero MiPlata.html\" -Confirm:$false)",
+      "Bash(mvnw.cmd compile *)",
+      "PowerShell(java -version 2>&1)",
+      "mcp__26c1070c-c8a0-44c7-8def-a53abb882616__search_files"
     ]
   }
 }

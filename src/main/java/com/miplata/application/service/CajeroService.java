@@ -53,7 +53,7 @@ public class CajeroService implements CajeroUseCase {
                                             BigDecimal monto) {
         Cuenta origen = getCuenta(origenId);
         Cuenta destino = getCuenta(destinoId);
-        origen.transferirA(destino, monto);
+        origen.transferir(destino, monto);
         cuentaRepo.guardar(origen);
         cuentaRepo.guardar(destino);
         return TransferenciaResponse.builder()

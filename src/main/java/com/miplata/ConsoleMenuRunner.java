@@ -83,6 +83,7 @@ public class ConsoleMenuRunner implements CommandLineRunner {
         } catch (Exception e) {
             println("[ERROR] " + e.getMessage());
         }
+        pausar();
     }
 
     // ── MP-6: Login ──────────────────────────────────────────────────────────
@@ -105,9 +106,11 @@ public class ConsoleMenuRunner implements CommandLineRunner {
                 println("[!] " + resp.getMensaje());
                 if (resp.getIntentosRestantes() > 0)
                     println("    Intentos restantes: " + resp.getIntentosRestantes());
+                pausar();
             }
         } catch (Exception e) {
             println("[ERROR] " + e.getMessage());
+            pausar();
         }
     }
 
@@ -206,6 +209,7 @@ public class ConsoleMenuRunner implements CommandLineRunner {
                     i + 1, c.getTipoCuenta(), c.getNumeroCuenta(),
                     c.getSaldo(), c.getEstado()));
         }
+        pausar();
     }
 
     private void abrirCuenta() {
@@ -240,6 +244,7 @@ public class ConsoleMenuRunner implements CommandLineRunner {
         } catch (Exception e) {
             println("[ERROR] " + e.getMessage());
         }
+        pausar();
     }
 
     // ── MP-11: Saldo y extracto ──────────────────────────────────────────────
@@ -257,6 +262,7 @@ public class ConsoleMenuRunner implements CommandLineRunner {
         } catch (Exception e) {
             println("[ERROR] " + e.getMessage());
         }
+        pausar();
     }
 
     private void verExtracto() {
@@ -281,6 +287,7 @@ public class ConsoleMenuRunner implements CommandLineRunner {
         } catch (Exception e) {
             println("[ERROR] " + e.getMessage());
         }
+        pausar();
     }
 
     // ── MP-9: Consignar ──────────────────────────────────────────────────────
@@ -298,6 +305,7 @@ public class ConsoleMenuRunner implements CommandLineRunner {
         } catch (Exception e) {
             println("[ERROR] " + e.getMessage());
         }
+        pausar();
     }
 
     // ── Retirar ──────────────────────────────────────────────────────────────
@@ -317,6 +325,7 @@ public class ConsoleMenuRunner implements CommandLineRunner {
         } catch (Exception e) {
             println("[ERROR] " + e.getMessage());
         }
+        pausar();
     }
 
     // ── MP-10: Transferir ────────────────────────────────────────────────────
@@ -361,6 +370,7 @@ public class ConsoleMenuRunner implements CommandLineRunner {
         } catch (Exception e) {
             println("[ERROR] " + e.getMessage());
         }
+        pausar();
     }
 
     // ── MP-4: Compra con tarjeta de crédito ──────────────────────────────────
@@ -382,6 +392,7 @@ public class ConsoleMenuRunner implements CommandLineRunner {
         } catch (Exception e) {
             println("[ERROR] " + e.getMessage());
         }
+        pausar();
     }
 
     // ── MP-7: Cambio de contraseña ───────────────────────────────────────────
@@ -399,6 +410,7 @@ public class ConsoleMenuRunner implements CommandLineRunner {
         } catch (Exception e) {
             println("[ERROR] " + e.getMessage());
         }
+        pausar();
     }
 
     // ── MP-8: Panel Administrador ────────────────────────────────────────────
@@ -434,6 +446,7 @@ public class ConsoleMenuRunner implements CommandLineRunner {
                     c.getId(), c.getNombreCompleto(), c.getUsername(),
                     c.getEstado(), c.getIntentosFallidos()));
         }
+        pausar();
     }
 
     private void desbloquearCliente() {
@@ -444,6 +457,7 @@ public class ConsoleMenuRunner implements CommandLineRunner {
         } catch (Exception e) {
             println("[ERROR] " + e.getMessage());
         }
+        pausar();
     }
 
     private void eliminarCliente() {
@@ -454,6 +468,7 @@ public class ConsoleMenuRunner implements CommandLineRunner {
         } catch (Exception e) {
             println("[ERROR] " + e.getMessage());
         }
+        pausar();
     }
 
     // ── Conexión DB ──────────────────────────────────────────────────────────
@@ -477,7 +492,18 @@ public class ConsoleMenuRunner implements CommandLineRunner {
 
     private String leer(String mensaje) {
         System.out.print(mensaje);
+        System.out.flush();
         return scanner.nextLine().trim();
+    }
+
+    private void pausar() {
+        println("\n--------------------------------------------");
+        while (true) {
+            String input = leer("Presione 1 para volver al menú: ");
+            if (input.equals("1")) break;
+            println("[!] Presione 1 para continuar.");
+        }
+        println("--------------------------------------------");
     }
 
     private void println(String texto) {

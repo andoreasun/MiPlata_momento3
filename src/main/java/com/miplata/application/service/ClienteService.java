@@ -5,6 +5,8 @@ import com.miplata.application.port.in.ClienteUseCase;
 import com.miplata.application.port.out.ClienteRepositoryPort;
 import com.miplata.application.port.out.CuentaRepositoryPort;
 import com.miplata.domain.enums.EstadoCliente;
+import com.miplata.domain.exception.CredencialesInvalidasException;
+import com.miplata.domain.exception.CuentaBloqueadaException;
 import com.miplata.domain.model.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -57,26 +59,31 @@ public class ClienteService implements ClienteUseCase {
                     .build();
 
         Cliente cliente = opt.get();
+
+        boolean ok = passwordEncoder.matches(req.getPassword(), cliente.getPasswordHash());
+
         try {
-            boolean ok = passwordEncoder.matches(
-                    req.getPassword(), cliente.getPasswordHash());
             cliente.autenticar(ok);
-            clienteRepo.guardar(cliente);
-            return LoginResponse.builder()
-                    .clienteId(cliente.getId().toString())
-                    .nombreCompleto(cliente.getNombreCompleto())
-                    .autenticado(true)
-                    .intentosRestantes(3)
-                    .mensaje("Bienvenido, " + cliente.getNombreCompleto())
-                    .build();
-        } catch (Exception e) {
-            clienteRepo.guardar(cliente);
+        } catch (CuentaBloqueadaException | CredencialesInvalidasException ex) {
+            // Intentar persistir el contador de intentos; si falla, se ignora
+            try { clienteRepo.guardar(cliente); } catch (Exception ignored) {}
             return LoginResponse.builder()
                     .autenticado(false)
                     .intentosRestantes(cliente.getIntentosRestantes())
-                    .mensaje(e.getMessage())
+                    .mensaje(ex.getMessage())
                     .build();
         }
+
+        // Autenticación exitosa: persistir reset de intentos (si falla, no invalida el login)
+        try { clienteRepo.guardar(cliente); } catch (Exception ignored) {}
+
+        return LoginResponse.builder()
+                .clienteId(cliente.getId().toString())
+                .nombreCompleto(cliente.getNombreCompleto())
+                .autenticado(true)
+                .intentosRestantes(3)
+                .mensaje("Bienvenido, " + cliente.getNombreCompleto())
+                .build();
     }
 
     @Override
@@ -89,7 +96,7 @@ public class ClienteService implements ClienteUseCase {
                         "Usuario no encontrado."));
         boolean ok = passwordEncoder.matches(
                 req.getPasswordActual(), cliente.getPasswordHash());
-        cliente.cambiarPassword(ok,
+        cliente.cambiarContrasena(ok,
                 passwordEncoder.encode(req.getPasswordNuevo()));
         clienteRepo.guardar(cliente);
     }
